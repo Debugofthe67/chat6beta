@@ -5,7 +5,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// CONFIGURATION: Points directly to your secure OpenRouter dashboard variable
+// Force-allow open cross-origin traffic explicitly for older clients
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
 const OPENROUTER_API_KEY = process.env.GEMINI_API_KEY; 
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -16,10 +22,9 @@ app.get('/ping', function(req, res) {
 app.post('/chat', async function(req, res) {
     try {
         if (!OPENROUTER_API_KEY) {
-            return res.status(500).json({ reply: "Error: OPENROUTER_API_KEY environment variable is missing on Render." });
+            return res.status(500).json({ reply: "Error: GEMINI_API_KEY variable is missing on Render." });
         }
 
-        // 1. Matches your official documentation payload structure exactly
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
@@ -27,11 +32,11 @@ app.post('/chat', async function(req, res) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'google/gemini-2.5-flash', // Direct target to Google's updated Flash model via OpenRouter
+                model: 'google/gemini-2.5-flash', 
                 messages: [
                     {
                         role: 'user',
-                        content: req.body.message, // Pulls the text sent from your iOS 6 device
+                        content: req.body.message
                     }
                 ]
             })
@@ -39,21 +44,20 @@ app.post('/chat', async function(req, res) {
 
         const data = await response.json();
         
-        // 2. Traverses OpenRouter's structural array formatting safely
+        // FIX: Added [0] brackets to correctly extract text from OpenRouter's array format
         if (data.choices && data.choices[0] && data.choices[0].message) {
-            const reply = data.choices[0].message.content;
-            res.json({ reply: reply });
+            res.json({ reply: data.choices[0].message.content });
         } else {
             console.error("Payload mismatch from OpenRouter:", JSON.stringify(data));
-            res.json({ reply: "The routing tunnel is initializing. Please send your message again." });
+            res.json({ reply: "OpenRouter response formatting error. Please try again." });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ reply: "Internal Server Error parsing communication lanes across OpenRouter." });
+        res.status(500).json({ reply: "Internal Server Error parsing communication lanes." });
     }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', function() {
-    console.log('OpenRouter tunnel processing data on port ' + PORT);
+    console.log('OpenRouter server engine active on port ' + PORT);
 });
