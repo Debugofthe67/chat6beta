@@ -31,11 +31,14 @@ app.post('/chat', async function(req, res) {
             headers: {
                 'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
                 'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://chat6beta.onrender.com', // Identifies your project domain to OpenRouter
-                'X-OpenRouter-Title': 'Gemini iOS6 Chat App'      // Sets your custom application identification name
+                'HTTP-Referer': 'https://chat6beta.onrender.com', 
+                'X-OpenRouter-Title': 'Gemini iOS6 Chat App'      
             },
             body: JSON.stringify({
-                model: 'google/gemini-2.5-flash', // Direct target to Google's updated free model
+                // FIX 1: Added ":free" to match OpenRouter's free sandbox model routing
+                model: 'google/gemini-2.5-flash:free', 
+                // FIX 2: Caps response length to fit comfortably under your account limits
+                max_tokens: 1000, 
                 messages: [
                     {
                         role: 'user',
@@ -44,6 +47,7 @@ app.post('/chat', async function(req, res) {
                 ]
             })
         });
+
 
         const data = await response.json();
         
