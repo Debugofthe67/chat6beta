@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Standalone Web App Meta flags for iOS Home Screen Bookmarks -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Gemini AI</title>
+    <style>
+        body { 
+            font-family: Helvetica, Arial, sans-serif; 
+            background: #c5cbd4; 
+            margin: 0; 
+            padding: 10px; 
+            -webkit-user-select: none;
+        }
+        
+        /* Skeuomorphic Glass Container holding chat logs */
+        #chatbox { 
+            background: #ffffff; 
+            border: 1px solid #999999; 
+            border-radius: 8px; 
+            height: 310px; 
+            overflow-y: scroll; 
+            padding: 10px; 
+            margin-bottom: 10px; 
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.6); 
+            -webkit-overflow-scrolling: touch; /* Momentum scroll flag for retro iOS Safari engines */
+        }
+        
+        .msg { 
+            margin: 8px 0; 
+            padding: 7px 12px; 
+            border-radius: 14px; 
+            max-width: 75%; 
+            font-size: 14px; 
+            word-wrap: break-word;
+            clear: both;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+        
+        /* Vintage SMS App Blue Balloon Gradient styling */
+        .user { 
+            background: #2687f5;
+            background: -webkit-gradient(linear, left top, left bottom, from(#60a7f9), to(#1266ee));
+            color: white; 
+            float: right;
+            text-shadow: 0 -1px 0 rgba(0,0,0,0.3);
+            border: 1px solid #105cd6;
+        }
+        
+        /* Vintage SMS App Gray Balloon Gradient styling */
+        .bot { 
+            background: #e5e5ea; 
+            background: -webkit-gradient(linear, left top, left bottom, from(#f1f1f4), to(#dcdce0));
+            color: black; 
+            float: left;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+            border: 1px solid #c8c8cc;
+        }
+        
+        #input-area { 
+            width: 100%; 
+            display: table; 
+            clear: both;
+            padding-top: 5px;
+        }
+        
+        #text-box { 
+            display: table-cell; 
+            width: 78%; 
+            height: 34px; 
+            font-size: 16px; 
+            border: 1px solid #a0a0a0; 
+            border-radius: 5px; 
+            padding: 4px 6px; 
+            box-sizing: border-box; 
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+            -webkit-user-select: text;
+        }
+        
+        /* Glossy iOS 6 Blue Action Button Layout */
+        #send-btn { 
+            display: table-cell; 
+            width: 20%; 
+            font-size: 14px; 
+            background: #1c5fd1;
+            background: -webkit-gradient(linear, left top, left bottom, from(#528ef4), color-stop(0.5, #2467d6), color-stop(0.5, #1454c6), to(#1859cc));
+            color: white; 
+            border: 1px solid #133f91; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            height: 34px; 
+            vertical-align: middle; 
+            text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.4);
+        }
+        
+        #send-btn:active {
+            background: -webkit-gradient(linear, left top, left bottom, from(#1446a3), to(#0d2f70));
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chatbox">
+        <div class="msg bot">Hello! I am Gemini. Ask me anything.</div>
+    </div>
+
+    <div id="input-area">
+        <input type="text" id="text-box" placeholder="Type a message...">
+        <div style="display: table-cell; width: 2%;"></div>
+        <button id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+
+    <script type="text/javascript">
+        // PRODUCTION WIRE: Directly points to your live Render proxy server
+        var SERVER_IP = "https://ichat6.onrender.com"; 
+
+        function sendMessage() {
+            var input = document.getElementById("text-box");
+            var chatbox = document.getElementById("chatbox");
+            var text = input.value;
+            
+            // Replaces modern string.trim() using classic layout regex matching
+            if (!text || text.replace(/^\s+|\s+$/g, '') === "") return;
+
+            // Render User bubble text strings
+            chatbox.innerHTML += '<div class="msg user">' + text + '</div>';
+            input.value = "";
+            
+            // Clear float styles to ensure bubbles align vertically on older WebKit engines
+            chatbox.innerHTML += '<div style="clear:both; height:0px;"></div>';
+            chatbox.scrollTop = chatbox.scrollHeight;
+
+            // Pure AJAX / XMLHttpRequest pipeline built explicitly for iOS 6 native modules
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", SERVER_IP + "/chat", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var data = JSON.parse(xhr.responseText);
+                        chatbox.innerHTML += '<div class="msg bot">' + data.reply + '</div>';
+                    } else {
+                        chatbox.innerHTML += '<div class="msg bot">Error ' + xhr.status + ': Failed communication lane check.</div>';
+                    }
+                    chatbox.innerHTML += '<div style="clear:both; height:0px;"></div>';
+                    chatbox.scrollTop = chatbox.scrollHeight;
+                }
+            };
+            
+            xhr.send(JSON.stringify({ message: text }));
+        }
+
+        // Tracking return key command sequences on virtual iOS keypads
+        document.getElementById("text-box").addEventListener("keyup", function(event) {
+            if (event.keyCode === 13) {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
