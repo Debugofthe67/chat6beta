@@ -31,7 +31,7 @@ app.post('/chat', async function(req, res) {
             headers: {
                 'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
                 'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://onrender.com', // Identifies your project domain to OpenRouter
+                'HTTP-Referer': 'https://chat6beta.onrender.com', // Identifies your project domain to OpenRouter
                 'X-OpenRouter-Title': 'Gemini iOS6 Chat App'      // Sets your custom application identification name
             },
             body: JSON.stringify({
