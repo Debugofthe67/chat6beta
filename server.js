@@ -5,7 +5,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Force-allow open cross-origin traffic explicitly for older clients
+// Global Cross-Origin safety rules allowing your legacy webkit client to handshake securely
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -22,17 +22,20 @@ app.get('/ping', function(req, res) {
 app.post('/chat', async function(req, res) {
     try {
         if (!OPENROUTER_API_KEY) {
-            return res.status(500).json({ reply: "Error: GEMINI_API_KEY variable is missing on Render." });
+            return res.status(500).json({ reply: "Error: GEMINI_API_KEY environment variable is missing on Render." });
         }
 
+        // Integrates your new official documentation tracking headers natively
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://onrender.com', // Identifies your project domain to OpenRouter
+                'X-OpenRouter-Title': 'Gemini iOS6 Chat App'      // Sets your custom application identification name
             },
             body: JSON.stringify({
-                model: 'google/gemini-2.5-flash', 
+                model: 'google/gemini-2.5-flash', // Direct target to Google's updated free model
                 messages: [
                     {
                         role: 'user',
@@ -44,16 +47,17 @@ app.post('/chat', async function(req, res) {
 
         const data = await response.json();
         
-        // FIX: Added [0] brackets to correctly extract text from OpenRouter's array format
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-            res.json({ reply: data.choices[0].message.content });
+        // Safely extracts the text string out of OpenRouter's choice array index blocks
+        if (data && data.choices && data.choices[0] && data.choices[0].message) {
+            const replyText = data.choices[0].message.content;
+            res.json({ reply: replyText });
         } else {
             console.error("Payload mismatch from OpenRouter:", JSON.stringify(data));
-            res.json({ reply: "OpenRouter response formatting error. Please try again." });
+            res.json({ reply: "The processing tunnel encountered an error. Please tap Send again." });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ reply: "Internal Server Error parsing communication lanes." });
+        res.status(500).json({ reply: "Internal Server Error parsing communication lanes across OpenRouter." });
     }
 });
 
